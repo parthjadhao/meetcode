@@ -1,4 +1,3 @@
-const express = require('express');
 const bodyParser = require('body-parser')
 const jwt = require('jsonwebtoken')
 const app = express();
@@ -18,30 +17,35 @@ let userSecret = "klsdfjklsdfjsdklfj"
 
 function adminAutheticate(req, res, next) {
   const token = req.headers.authorization.split(" ")[1]
-  jwt.verify(token, adminSecret, { expiress: '1hr' }, (err, userDetail) => {
+  jwt.verify(token, adminSecret, { expiress: '1hr' }, (err, adminDetail) => {
     if (err) {
       res.status(404).send("unexpected error while decoding the token inside adminAuthetication")
     }
-    req.user = userDetail
-    console.log(req.user)
-    console.log(userDetail)
-    next()
+    for (let i = 0; i < admin.length; i++) {
+      if (admin[i].id == adminDetail.id && admin[i].username == adminDetail.username) {
+        req.admin = adminDetail
+        next()
+      }
+    }
   })
 }
 
-function userAutheticate(req, res, next) {
-  const { username, id } = req.headers
-  for (let index = 0; index < user.length; index++) {
-    let userExist = user[index].username == username && admin[index.id] == id
-    if (userExist) {
-      next()
-    }
-  }
-  if (!userExist) {
-    res.status(400).send("unauthorized request")
-  }
-}
 
+function userAutheticate(req, res, next) {
+  const token = req.headers.authroization.split(" ")[1]
+  jwt.verify(token, userSecret, { expiress: '1hr' }, (err, userDetail) => {
+    if (err) {
+      res.status(404).send("unexpected error while decoding the token inside userAutheticate")
+    }
+    for (let i = 0; i < user.length; i++) {
+      if (user[i].id == userDetail.id && user[i].username == userDetail.username) {
+        req.user = userDetail
+        next()
+      }
+
+    }
+  })
+}
 
 app.post('/registerUser', (req, res) => {
   const { username, password, phoneNumber, email } = req.body
@@ -139,7 +143,7 @@ app.post('/adminUplodProblem', adminAutheticate, (req, res) => {
 });
 
 // user authorized route
-app.post('/userShowAllProblems', (req, res) => {
+app.post('/userShowAllProblems', userAutheticate, (req, res) => {
   //access the problem array and see is it empty or not
   //if problem array is empty it will send sorry something wrong no one posted problems
   // other wise it will pass all the problems
@@ -150,7 +154,7 @@ app.post('/userShowAllProblems', (req, res) => {
 })
 
 // user authorized route
-app.post('/userSubmitProblemSolution', (req, res) => {
+app.post('/userSubmitProblemSolution', userAutheticate, (req, res) => {
   // take solved problem id and user written code
   // find the testcases of the problems using problem id 
   // execute the problem and see wether it passes the test code or not
