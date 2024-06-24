@@ -1,0 +1,5 @@
+MongoDb username and password
+password - sfdsfdxszfdsfsdfsd
+username - parthjadhao
+mongoDb connection string formate - mongodb+srv://<username>:<password>@cluster0.rvlgksd.mongodb.net/
+mongoDb connection string - mongodb+srv://parthjadhao:sfdsfdxszfdsfsdfsd@cluster0.rvlgksd.mongodb.net/
