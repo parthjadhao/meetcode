@@ -44,7 +44,7 @@ async function registerAdmin(req, res) {
 }
 
 async function adminUplodProblem(req, res) {
-    const { title, statement, testCase, discription } = req.body
+    const { title, statement, examples, discription,difficulty } = req.body
     const admin = req.admin
     const problemCreatedAdmin = await Admin.findOne({ username: admin.username, password: admin.password })
     if (!title) {
@@ -53,11 +53,14 @@ async function adminUplodProblem(req, res) {
     if (!statement) {
         res.status(400).send("please provide problem statemtn")
     }
-    if (!testCase) {
+    if (!examples) {
         res.status(400).send("please provide test case")
     }
     if (!discription) {
         res.status(400).send("please privde problem discription")
+    }
+    if (!difficulty){
+        res.status(400).send("please enter the difficulty of the problem")
     }
     problemExist = await Problem.findOne({ title: title, statement: statement })
     if (problemExist) {
@@ -66,18 +69,20 @@ async function adminUplodProblem(req, res) {
     data = {
         title: title,
         statement: statement,
-        testCase: testCase,
-        discription: discription
+        examples: examples,
+        discription: discription,
+        difficulty: difficulty
     }
     const newProblem = new Problem(data)
     newProblem.save()
     const updatedAdmin = await Admin.findOneAndUpdate(
-        { username: admin.username, password: admin.password },
+        { username: problemCreatedAdmin.username, password: problemCreatedAdmin.password },
         { $push: { createdProblems: newProblem._id } },
     )
     res.json({ status: 200, message: "problem uploaded succesfully", problemCreatedBy: updatedAdmin.username })
 
 }
+// TODO: create routes for showing all the created probleme by admin
 
 // TODO: create routes for admin modify  or update the creatred problem
 
