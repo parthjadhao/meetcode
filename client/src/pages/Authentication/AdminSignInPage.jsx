@@ -1,12 +1,17 @@
 import React from "react"
 import axios from "axios"
+
+// TODO : use recoil for state management
+// TODO : imporove the ui of the sigin Page
+// TODO : convert it into tsx
+// TODO : implement zod validation
 function AdminSignInPage() {
     const [email, setEmail] = React.useState({});
     const [username, setUsername] = React.useState({});
     const [password, setPassword] = React.useState({});
     const [number, setNumber] = React.useState({});
 
-    async function regiserUserRequest() {
+    async function regiserAdminRequest() {
         const response = await axios.post("http://localhost:3000/admin/registerAdmin",{
             username: username,
             email: email,
@@ -49,7 +54,7 @@ function AdminSignInPage() {
                 setNumber(event.target.value)
             }} 
         />
-        <button style={{ color: "white" }} onClick={regiserUserRequest}>SignIn</button>
+        <button style={{ color: "white" }} onClick={regiserAdminRequest}>SignIn</button>
     </>
 }
 export default AdminSignInPage;
