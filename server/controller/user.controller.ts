@@ -1,11 +1,7 @@
-// const { Problem, User } = require('../db')\
-import { HydratedDocument } from "mongoose";
-import Problem, { Iuser } from "../db";
+import Problem from "../db";
 import User from "../db"
-// const jwt = require('jsonwebtoken')
-import jwt, { Secret } from "jsonwebtoken"
-// const { userSecret} = require('../middlewares/userAuthentication')
-import userSecret from "../middlewares/userAuthentication";
+import jwt from "jsonwebtoken"
+const userSecret = process.env.USER_SECRET;
 import { Response,Request } from "express";
 
 async function registerUser(req:Request,res:Response){
@@ -35,8 +31,11 @@ async function registerUser(req:Request,res:Response){
         }
         const newUser = new User.User(data)
         await newUser.save()
-        // const token = jwt.sign({ username: data.username, password: data.password }, userSecret)
-        const token = jwt.sign({username:data.username,password:data.password},userSecret.userSecret)
+        if (typeof(userSecret)==="undefined") {
+            throw new Error("userSecret is not defined please defined it in you .env file");
+            
+        }
+        const token = jwt.sign({username:data.username,password:data.password},userSecret)
         return res.json({ status: 200, message: "user account created succesfully", token: token })
     } catch (err) {
         return res.send('following error has occured : '+err)
@@ -60,12 +59,6 @@ async function userShowAllProblems(req:Request,res:Response){
 }
 
 // TODO : create route for user to submit problem and return response on wheater solved problem is correct or not
-
-// module.exports = {
-//     registerUser,
-//     userLogin,
-//     userShowAllProblems
-// }
 
 export default{
     registerUser,

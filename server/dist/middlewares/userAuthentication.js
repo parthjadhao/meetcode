@@ -13,7 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-let userSecret = "klsdfjklsdfjsdklfj";
+let userSecret = process.env.USER_SECRET;
 const index_1 = __importDefault(require("../db/index"));
 function isJwtPayload(value) {
     return typeof value === "object" && "username" in value && "password" in value;
@@ -23,6 +23,9 @@ function userAuthentication(req, res, next) {
         const authHeaders = req.headers.authorization;
         if (authHeaders) {
             const token = authHeaders.split(" ")[1];
+            if (typeof (userSecret) === "undefined") {
+                throw new Error("userSecret key is not defined please defined you own userSecretkey");
+            }
             try {
                 const userDetail = yield jsonwebtoken_1.default.verify(token, userSecret); //
                 if (!isJwtPayload(userDetail)) {
@@ -32,8 +35,12 @@ function userAuthentication(req, res, next) {
                 if (!userExist) {
                     return res.status(400).send("User with such username doesn't exist");
                 }
-                const userExistData = userExist.username;
-                res.setHeader("user", userExistData);
+                if (typeof (userExist.username) === "string") {
+                    res.setHeader("user", userExist.username);
+                }
+                else {
+                    return res.status(401).send("inccorect decoded userdata formate");
+                }
             }
             catch (error) {
                 console.log("Error during authentication:", error);

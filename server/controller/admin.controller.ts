@@ -1,39 +1,8 @@
-// const { Admin, Problem } = require('../db')
-import { HydratedDocument } from "mongoose";
 import Admin from "../db"
 import Problem from "../db"
-import { Iadmin,Iproblem } from "../db";
-// const jwt = require('jsonwebtoken')
 import jwt from "jsonwebtoken";
-// const { adminSecret} = require('../middlewares/adminAuthentication')
-import adminSecret from "../middlewares/adminAuthentication";
+const adminSecret = process.env.ADMIN_SECRET
 import { Request,Response } from "express";
-
-
-// const userSchema = new mongoose.Schema({
-//     username: String,
-//     password: String,
-//     phoneNumber: String,
-//     email: String,
-//     solvedProblems: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Problem' }]
-//   })
-
-// const problemSchema = new mongoose.Schema({
-//     title: String,
-//     difficulty: {
-//       type: String,
-//       enum: difficultyEnum,
-//       require: true
-//     },
-//     acceptance: String,
-//     statement: String,
-//     discription: String,
-//     examples: [{
-//       input: String,
-//       output: String,
-//       explanation: String
-//     }]
-//   })
 
 function adminLogin(req:Request, res:Response) {
     res.status(200).send('admin logged in succesfully')
@@ -66,9 +35,12 @@ async function registerAdmin(req:Request, res:Response) {
             email: email
         }
         console.log(data)
-        const newAdmin:HydratedDocument<Iadmin> = new Admin.Admin(data)
+        const newAdmin = new Admin.Admin(data)
         await newAdmin.save()
-        const token = jwt.sign({ username: data.username, password: data.password }, adminSecret.adminSecret)
+        if (typeof(adminSecret)==="undefined") {
+            throw new Error("Please define adminSecret in you .env file");
+        }
+        const token = jwt.sign({ username: data.username, password: data.password }, adminSecret)
         return res.json({ status: 200, message: "admin account created succesfully", token: token })
     } catch (err) {
         return res.send(err)
@@ -76,8 +48,7 @@ async function registerAdmin(req:Request, res:Response) {
 }
 
 async function adminUplodProblem(req:Request, res:Response) {
-    const { title, statement, examples, discription,difficulty }:HydratedDocument<Iproblem> = req.body
-    // const admin:AdminData = req.header.admin;
+    const { title, statement, examples, discription,difficulty } = req.body
     const admin = req.headers["admin"];
     const problemCreatedAdmin = await Admin.Admin.findOne({ username: admin})
     if (!title) {

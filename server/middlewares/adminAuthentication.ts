@@ -1,7 +1,7 @@
 import jwt, { JwtPayload } from "jsonwebtoken";
-import { Response,Request,NextFunction } from "express";
-let adminSecret = "lksdfjksdlfjsdkl";
-import Admin from "../db/index"; 
+import { Response, Request, NextFunction } from "express";
+let adminSecret = process.env.ADMIN_SECRET;
+import Admin from "../db/index";
 
 
 function isJwtPayload(value: string | JwtPayload): value is JwtPayload {
@@ -14,6 +14,9 @@ async function adminAuthentication(req: Request, res: Response, next: NextFuncti
   if (authHeader) {
     const token = authHeader.split(" ")[1];
 
+    if (typeof (adminSecret) === "undefined") {
+      throw new Error("adminSecret key is not available please create adminsecretkey");
+    }
     try {
       const adminDetail = await jwt.verify(token, adminSecret) as JwtPayload; // Type assertion (if confident of valid tokens)
 
@@ -26,9 +29,11 @@ async function adminAuthentication(req: Request, res: Response, next: NextFuncti
       if (!adminExist) {
         return res.status(400).send("Admin with such username doesn't exist");
       }
-
-      const adminExistedData:string = adminExist.username;
-      res.setHeader("admin",adminExistedData)
+      if (typeof(adminExist.username)==="string") {
+        res.setHeader("admin",adminExist.username)
+      }else{
+        return res.status(401).send("inccorect decoded userdata formate")
+      }
       next();
     } catch (error) {
       console.error("Error during authentication:", error); // Log the error for debugging

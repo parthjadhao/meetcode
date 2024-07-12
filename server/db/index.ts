@@ -1,16 +1,7 @@
-// const mongoose = require('mongoose')
 import mongoose,{Schema} from "mongoose"
-import {Model} from "mongoose"
 const difficultyEnum = ['easy','medium','hard']
 
-export interface Iuser{
-  username:string,
-  password:string,
-  phoneNumber:string,
-  email:string,
-  solvedProblems:Iproblem[]
-}
-const userSchema = new Schema<Iuser>({
+const userSchema = new Schema({
   username: String,
   password: String,
   phoneNumber: String,
@@ -18,14 +9,7 @@ const userSchema = new Schema<Iuser>({
   solvedProblems: [{ type: Schema.Types.ObjectId, ref: 'Problem' }]
 })
 
-export interface Iadmin{
-  username: string,
-  password: string,
-  phoneNumber: string,
-  email: string,
-  createdProblems:Iproblem[]
-}
-const adminSchema = new Schema<Iadmin>({
+const adminSchema = new Schema({
   username: String,
   password: String,
   phoneNumber: String,
@@ -33,20 +17,7 @@ const adminSchema = new Schema<Iadmin>({
   createdProblems: [{ type: Schema.Types.ObjectId, ref: 'Problem' }]
 })
 
-
-export interface Iproblem{
-  title: String,
-  difficulty: String,
-  acceptance: String,
-  statement: String,
-  discription: String
-  examples:{
-    input:String,
-    output:String
-    explanation:String
-  }[]
-}
-const problemSchema = new Schema<Iproblem>({
+const problemSchema = new Schema({
   title: String,
   difficulty: {
     type: String,
@@ -63,15 +34,9 @@ const problemSchema = new Schema<Iproblem>({
   }]
 })
 
-const User = mongoose.model<Iuser>('User', userSchema);
-const Admin = mongoose.model<Iadmin>('Admin', adminSchema);
-const Problem = mongoose.model<Iproblem>('Problem', problemSchema);
-
-// module.exports = {
-//   User,
-//   Admin,
-//   Problem
-// }
+const User = mongoose.model('User', userSchema);
+const Admin = mongoose.model('Admin', adminSchema);
+const Problem = mongoose.model('Problem', problemSchema);
 
 export default {
   User,

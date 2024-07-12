@@ -14,10 +14,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const db_1 = __importDefault(require("../db"));
 const db_2 = __importDefault(require("../db"));
-// const jwt = require('jsonwebtoken')
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-// const { userSecret} = require('../middlewares/userAuthentication')
-const userAuthentication_1 = __importDefault(require("../middlewares/userAuthentication"));
+const userSecret = process.env.USER_SECRET;
 function registerUser(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -46,8 +44,10 @@ function registerUser(req, res) {
             };
             const newUser = new db_2.default.User(data);
             yield newUser.save();
-            // const token = jwt.sign({ username: data.username, password: data.password }, userSecret)
-            const token = jsonwebtoken_1.default.sign({ username: data.username, password: data.password }, userAuthentication_1.default.userSecret);
+            if (typeof (userSecret) === "undefined") {
+                throw new Error("userSecret is not defined please defined it in you .env file");
+            }
+            const token = jsonwebtoken_1.default.sign({ username: data.username, password: data.password }, userSecret);
             return res.json({ status: 200, message: "user account created succesfully", token: token });
         }
         catch (err) {
@@ -75,11 +75,6 @@ function userShowAllProblems(req, res) {
     });
 }
 // TODO : create route for user to submit problem and return response on wheater solved problem is correct or not
-// module.exports = {
-//     registerUser,
-//     userLogin,
-//     userShowAllProblems
-// }
 exports.default = {
     registerUser,
     userLogin,

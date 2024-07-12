@@ -23,7 +23,6 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-// const mongoose = require('mongoose')
 const mongoose_1 = __importStar(require("mongoose"));
 const difficultyEnum = ['easy', 'medium', 'hard'];
 const userSchema = new mongoose_1.Schema({
@@ -59,11 +58,6 @@ const problemSchema = new mongoose_1.Schema({
 const User = mongoose_1.default.model('User', userSchema);
 const Admin = mongoose_1.default.model('Admin', adminSchema);
 const Problem = mongoose_1.default.model('Problem', problemSchema);
-// module.exports = {
-//   User,
-//   Admin,
-//   Problem
-// }
 exports.default = {
     User,
     Admin,

@@ -1,5 +1,5 @@
 import jwt, { JwtPayload } from "jsonwebtoken"
-let userSecret = "klsdfjklsdfjsdklfj"
+let userSecret = process.env.USER_SECRET;
 import User from "../db/index"
 import { Response,Request,NextFunction } from "express"
 
@@ -11,6 +11,10 @@ async function userAuthentication(req :Request, res:Response, next:NextFunction)
   const authHeaders = req.headers.authorization;
   if (authHeaders) {
     const token = authHeaders.split(" ")[1];
+    
+    if (typeof(userSecret)==="undefined") {
+      throw new Error("userSecret key is not defined please defined you own userSecretkey");
+    }
     try {
       const userDetail = await jwt.verify(token,userSecret) as JwtPayload//
       
@@ -22,8 +26,12 @@ async function userAuthentication(req :Request, res:Response, next:NextFunction)
       if(!userExist){
         return res.status(400).send("User with such username doesn't exist")
       }
-      const userExistData:string = userExist.username;
-      res.setHeader("user",userExistData)
+      if (typeof(userExist.username)==="string") {
+        res.setHeader("user",userExist.username)
+      }
+      else{
+        return res.status(401).send("inccorect decoded userdata formate")
+      }
     } catch (error) {
       console.log("Error during authentication:",error)
       return res.status(401).send("Unauthorized access");

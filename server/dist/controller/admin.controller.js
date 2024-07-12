@@ -14,33 +14,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const db_1 = __importDefault(require("../db"));
 const db_2 = __importDefault(require("../db"));
-// const jwt = require('jsonwebtoken')
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-// const { adminSecret} = require('../middlewares/adminAuthentication')
-const adminAuthentication_1 = __importDefault(require("../middlewares/adminAuthentication"));
-// const userSchema = new mongoose.Schema({
-//     username: String,
-//     password: String,
-//     phoneNumber: String,
-//     email: String,
-//     solvedProblems: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Problem' }]
-//   })
-// const problemSchema = new mongoose.Schema({
-//     title: String,
-//     difficulty: {
-//       type: String,
-//       enum: difficultyEnum,
-//       require: true
-//     },
-//     acceptance: String,
-//     statement: String,
-//     discription: String,
-//     examples: [{
-//       input: String,
-//       output: String,
-//       explanation: String
-//     }]
-//   })
+const adminSecret = process.env.ADMIN_SECRET;
 function adminLogin(req, res) {
     res.status(200).send('admin logged in succesfully');
 }
@@ -74,7 +49,10 @@ function registerAdmin(req, res) {
             console.log(data);
             const newAdmin = new db_1.default.Admin(data);
             yield newAdmin.save();
-            const token = jsonwebtoken_1.default.sign({ username: data.username, password: data.password }, adminAuthentication_1.default.adminSecret);
+            if (typeof (adminSecret) === "undefined") {
+                throw new Error("Please define adminSecret in you .env file");
+            }
+            const token = jsonwebtoken_1.default.sign({ username: data.username, password: data.password }, adminSecret);
             return res.json({ status: 200, message: "admin account created succesfully", token: token });
         }
         catch (err) {
@@ -85,7 +63,6 @@ function registerAdmin(req, res) {
 function adminUplodProblem(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const { title, statement, examples, discription, difficulty } = req.body;
-        // const admin:AdminData = req.header.admin;
         const admin = req.headers["admin"];
         const problemCreatedAdmin = yield db_1.default.Admin.findOne({ username: admin });
         if (!title) {

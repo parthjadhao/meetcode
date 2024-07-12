@@ -13,7 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-let adminSecret = "lksdfjksdlfjsdkl";
+let adminSecret = process.env.ADMIN_SECRET;
 const index_1 = __importDefault(require("../db/index"));
 function isJwtPayload(value) {
     return typeof value === "object" && "username" in value && "password" in value; // Check for required properties
@@ -23,6 +23,9 @@ function adminAuthentication(req, res, next) {
         const authHeader = req.headers.authorization;
         if (authHeader) {
             const token = authHeader.split(" ")[1];
+            if (typeof (adminSecret) === "undefined") {
+                throw new Error("adminSecret key is not available please create adminsecretkey");
+            }
             try {
                 const adminDetail = yield jsonwebtoken_1.default.verify(token, adminSecret); // Type assertion (if confident of valid tokens)
                 if (!isJwtPayload(adminDetail)) {
@@ -32,8 +35,12 @@ function adminAuthentication(req, res, next) {
                 if (!adminExist) {
                     return res.status(400).send("Admin with such username doesn't exist");
                 }
-                const adminExistedData = adminExist.username;
-                res.setHeader("admin", adminExistedData);
+                if (typeof (adminExist.username) === "string") {
+                    res.setHeader("admin", adminExist.username);
+                }
+                else {
+                    return res.status(401).send("inccorect decoded userdata formate");
+                }
                 next();
             }
             catch (error) {
