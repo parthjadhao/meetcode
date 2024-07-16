@@ -3,6 +3,28 @@ import Problem from "../db"
 import jwt from "jsonwebtoken";
 const adminSecret = process.env.ADMIN_SECRET
 import { Request,Response } from "express";
+import {z} from "zod"
+
+let registerAdminInput = z.object({
+    username: z.string().min(1).max(14),
+    password: z.string().min(8).max(14),
+    phoneNumber: z.string().min(10).max(10),
+    email: z.string().email()
+})
+
+let problemExample = z.object({
+    input: z.string().min(1).max(30),
+    output: z.string().min(1).max(30)
+})
+
+let uploadProblemInput = z.object({
+    title: z.string().min(1).max(20),
+    statement: z.string().min(1).max(35),
+    discription: z.string().min(1).max(100),
+    example: z.array(problemExample),
+    difficulty: z.string().max(6)
+})
+// TODO : correct the implementation of adminLogin route
 
 function adminLogin(req:Request, res:Response) {
     res.status(200).send('admin logged in succesfully')
@@ -10,29 +32,22 @@ function adminLogin(req:Request, res:Response) {
 
 async function registerAdmin(req:Request, res:Response) {
     try {
-        const { username, password, phoneNumber, email } = req.body
-        if (!username) {
-            return res.status(400).send("usernmae is not entered please enter username")
+        const parsedInput  = registerAdminInput.safeParse(req.body);
+        if(!parsedInput.success){
+            res.status(411).json({
+                error : parsedInput.error
+            })
         }
-        if (!password) {
-            return res.status(400).send("password is not entered please enter password")
-        }
-        if (!phoneNumber) {
-            return res.status(400).send("phone Numbere is not entered please enter phone number")
-        }
-        if (!email) {
-            return res.status(400).send("email is not entered please entere email")
-        }
-        const adminExist = await Admin.Admin.findOne({ username })
+        const adminExist = await Admin.Admin.findOne({ username : parsedInput.data?.username })
         if (adminExist) {
             return res.status(400).send("admin with this user already exist please enter another username")
         }
         console.log(adminExist)
         const data = {
-            username: username,
-            password: password,
-            phoneNumber: phoneNumber,
-            email: email
+            username: parsedInput.data?.username,
+            password: parsedInput.data?.password,
+            phoneNumber: parsedInput.data?.phoneNumber,
+            email: parsedInput.data?.email
         }
         console.log(data)
         const newAdmin = new Admin.Admin(data)
@@ -48,34 +63,24 @@ async function registerAdmin(req:Request, res:Response) {
 }
 
 async function adminUplodProblem(req:Request, res:Response) {
-    const { title, statement, examples, discription,difficulty } = req.body
+    const parsedInput = uploadProblemInput.safeParse(req.body)
     const admin = req.headers["admin"];
     const problemCreatedAdmin = await Admin.Admin.findOne({ username: admin})
-    if (!title) {
-        res.status(400).send("provide problem title")
+    if (!parsedInput.success) {
+        return res.status(400).json({
+            error: parsedInput.error
+        })
     }
-    if (!statement) {
-        res.status(400).send("please provide problem statemtn")
-    }
-    if (!examples) {
-        res.status(400).send("please provide test case")
-    }
-    if (!discription) {
-        res.status(400).send("please privde problem discription")
-    }
-    if (!difficulty){
-        res.status(400).send("please enter the difficulty of the problem")
-    }
-    let problemExist = await Problem.Problem.findOne({ title: title, statement: statement })
+    let problemExist = await Problem.Problem.findOne({ title: parsedInput.data.title, statement: parsedInput.data.statement })
     if (problemExist) {
         return res.json({ status: 400, message: 'problem with same title and problem statemtn is already available', alreadyExistProbles: problemExist })
     }
     let data = {
-        title: title,
-        statement: statement,
-        examples: examples,
-        discription: discription,
-        difficulty: difficulty
+        title: parsedInput.data.title,
+        statement: parsedInput.data.statement,
+        examples: parsedInput.data.example,
+        discription: parsedInput.data.discription,
+        difficulty: parsedInput.data.difficulty
     }
     const newProblem = new Problem.Problem(data)
     newProblem.save()
@@ -87,10 +92,14 @@ async function adminUplodProblem(req:Request, res:Response) {
 
 }
 // TODO: create routes for showing all the created probleme by admin
+async function showAllProblem(req:Request,res:Response) {
+    // step : 1 fetch all the problems with containing admin id present in header admin and store in variable adminCreateProblem
+    // step : 2 check wheater the adminCreateProblem is undefined or null if adminCreateProblem is not null or undefined
+}
 
 // TODO: create routes for admin modify  or update the creatred problem
 
-// TODO: create routes allowing admin to arrange coding contest
+// TODO: create routes for admin to delet the problem
 
 export default {
     adminLogin,

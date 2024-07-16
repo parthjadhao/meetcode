@@ -16,35 +16,48 @@ const db_1 = __importDefault(require("../db"));
 const db_2 = __importDefault(require("../db"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const adminSecret = process.env.ADMIN_SECRET;
+const zod_1 = require("zod");
+let registerAdminInput = zod_1.z.object({
+    username: zod_1.z.string().min(1).max(14),
+    password: zod_1.z.string().min(8).max(14),
+    phoneNumber: zod_1.z.string().min(10).max(10),
+    email: zod_1.z.string().email()
+});
+let problemExample = zod_1.z.object({
+    input: zod_1.z.string().min(1).max(30),
+    output: zod_1.z.string().min(1).max(30)
+});
+let uploadProblemInput = zod_1.z.object({
+    title: zod_1.z.string().min(1).max(20),
+    statement: zod_1.z.string().min(1).max(35),
+    discription: zod_1.z.string().min(1).max(100),
+    example: zod_1.z.array(problemExample),
+    difficulty: zod_1.z.string().max(6)
+});
+// TODO : correct the implementation of adminLogin route
 function adminLogin(req, res) {
     res.status(200).send('admin logged in succesfully');
 }
 function registerAdmin(req, res) {
+    var _a, _b, _c, _d, _e;
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const { username, password, phoneNumber, email } = req.body;
-            if (!username) {
-                return res.status(400).send("usernmae is not entered please enter username");
+            const parsedInput = registerAdminInput.safeParse(req.body);
+            if (!parsedInput.success) {
+                res.status(411).json({
+                    error: parsedInput.error
+                });
             }
-            if (!password) {
-                return res.status(400).send("password is not entered please enter password");
-            }
-            if (!phoneNumber) {
-                return res.status(400).send("phone Numbere is not entered please enter phone number");
-            }
-            if (!email) {
-                return res.status(400).send("email is not entered please entere email");
-            }
-            const adminExist = yield db_1.default.Admin.findOne({ username });
+            const adminExist = yield db_1.default.Admin.findOne({ username: (_a = parsedInput.data) === null || _a === void 0 ? void 0 : _a.username });
             if (adminExist) {
                 return res.status(400).send("admin with this user already exist please enter another username");
             }
             console.log(adminExist);
             const data = {
-                username: username,
-                password: password,
-                phoneNumber: phoneNumber,
-                email: email
+                username: (_b = parsedInput.data) === null || _b === void 0 ? void 0 : _b.username,
+                password: (_c = parsedInput.data) === null || _c === void 0 ? void 0 : _c.password,
+                phoneNumber: (_d = parsedInput.data) === null || _d === void 0 ? void 0 : _d.phoneNumber,
+                email: (_e = parsedInput.data) === null || _e === void 0 ? void 0 : _e.email
             };
             console.log(data);
             const newAdmin = new db_1.default.Admin(data);
@@ -62,34 +75,24 @@ function registerAdmin(req, res) {
 }
 function adminUplodProblem(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { title, statement, examples, discription, difficulty } = req.body;
+        const parsedInput = uploadProblemInput.safeParse(req.body);
         const admin = req.headers["admin"];
         const problemCreatedAdmin = yield db_1.default.Admin.findOne({ username: admin });
-        if (!title) {
-            res.status(400).send("provide problem title");
+        if (!parsedInput.success) {
+            return res.status(400).json({
+                error: parsedInput.error
+            });
         }
-        if (!statement) {
-            res.status(400).send("please provide problem statemtn");
-        }
-        if (!examples) {
-            res.status(400).send("please provide test case");
-        }
-        if (!discription) {
-            res.status(400).send("please privde problem discription");
-        }
-        if (!difficulty) {
-            res.status(400).send("please enter the difficulty of the problem");
-        }
-        let problemExist = yield db_2.default.Problem.findOne({ title: title, statement: statement });
+        let problemExist = yield db_2.default.Problem.findOne({ title: parsedInput.data.title, statement: parsedInput.data.statement });
         if (problemExist) {
             return res.json({ status: 400, message: 'problem with same title and problem statemtn is already available', alreadyExistProbles: problemExist });
         }
         let data = {
-            title: title,
-            statement: statement,
-            examples: examples,
-            discription: discription,
-            difficulty: difficulty
+            title: parsedInput.data.title,
+            statement: parsedInput.data.statement,
+            examples: parsedInput.data.example,
+            discription: parsedInput.data.discription,
+            difficulty: parsedInput.data.difficulty
         };
         const newProblem = new db_2.default.Problem(data);
         newProblem.save();
@@ -98,8 +101,14 @@ function adminUplodProblem(req, res) {
     });
 }
 // TODO: create routes for showing all the created probleme by admin
+function showAllProblem(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        // step : 1 fetch all the problems with containing admin id present in header admin and store in variable adminCreateProblem
+        // step : 2 check wheater the adminCreateProblem is undefined or null if adminCreateProblem is not null or undefined
+    });
+}
 // TODO: create routes for admin modify  or update the creatred problem
-// TODO: create routes allowing admin to arrange coding contest
+// TODO: create routes for admin to delet the problem
 exports.default = {
     adminLogin,
     adminUplodProblem,

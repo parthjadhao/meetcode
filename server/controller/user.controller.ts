@@ -3,31 +3,32 @@ import User from "../db"
 import jwt from "jsonwebtoken"
 const userSecret = process.env.USER_SECRET;
 import { Response,Request } from "express";
+import {z} from "zod";
+
+let registerUserInput = z.object({
+    username: z.string().min(1).max(14),
+    password: z.string().min(8).max(14),
+    phoneNumber: z.string().min(10).max(10),
+    email: z.string().email()
+})
 
 async function registerUser(req:Request,res:Response){
     try {
-        const { username, password, phoneNumber, email } = req.body
-        if (!username) {
-            return res.status(400).send('username is not entered please enter username')
+        const parsedInput  = registerUserInput.safeParse(req.body);
+        if(!parsedInput.success){
+            res.status(411).json({
+                error : parsedInput.error
+            })
         }
-        if (!password) {
-            return res.status(400).send('passwrod is not entered please enter passwrod')
-        }
-        if (!phoneNumber) {
-            return res.status(400).send('phone number is not entered please enter phone number')
-        }
-        if (!email) {
-            return res.status(400).send('email is not entered please enter your email');
-        }
-        const userExist = await User.User.findOne({ username: username })
+        const userExist = await User.User.findOne({ username: parsedInput.data?.username })
         if (userExist) {
             return res.status(400).send("sorry user with this username alreay exist please choose different username")
         }
         const data = {
-            username: username,
-            password: password,
-            phoneNumber: phoneNumber,
-            email: email
+            username: parsedInput.data?.username,
+            password: parsedInput.data?.password,
+            phoneNumber: parsedInput.data?.phoneNumber,
+            email: parsedInput.data?.email
         }
         const newUser = new User.User(data)
         await newUser.save()
@@ -41,6 +42,8 @@ async function registerUser(req:Request,res:Response){
         return res.send('following error has occured : '+err)
     }
 }
+
+// TODO : correct the implementation of userLogin route
 function userLogin(req:Request,res:Response){
     res.status(200).send("user logged in succesfully")
 }
@@ -58,7 +61,12 @@ async function userShowAllProblems(req:Request,res:Response){
     }
 }
 
-// TODO : create route for user to submit problem and return response on wheater solved problem is correct or not
+// ############### Done #######################
+// TODO : create route for user to fetch details of specific problem
+
+// ############### Cannot Done ################
+// TODO : create route for user to see how his profile in his profile show his ammount of problem solved by user
+// TODO : create route for user to submit user solution and check wheather given solution is correct or not
 
 export default{
     registerUser,
